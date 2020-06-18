@@ -6,10 +6,12 @@
 #include <sys/netinet/in.h>
 
 int main(int argc, char* argv[]) {
-    int sockfd, newsockfd, portn;
+    int sockfd, newsockfd, portn, client_addr_len;
     int line_len = 2;
+    int sock_ready = 0;
     char buffer[512] = {0};
-    struct sockaddr_in my_addr = {0};
+    fd_set read_fds;
+    struct sockaddr_in my_addr = {0}, client_addr = {0};
 
     if (argc < 2) {
         fprintf(stderr, "ERROR, no port provided\n");
@@ -30,43 +32,57 @@ int main(int argc, char* argv[]) {
         error("ERROR on binding");
     }
     if (listen(sockfd, line_len) < 0){
-        error("ERROR on listening")
+        error("ERROR on listening");
     }
-    newsockfd = accept(sockfd, (struct sockaddr *)&my_addr,  )
 
+    const int WAIT_FOR_PACKET_TIMEOUT = 3; const int NUMBER_OF_FAILURES = 7; const int MAX_BLOCK_LEN = 512;
+    FD_ZERO(&read_fds);
+    FD_SET(sockfd, &read_fds);
 
-}
-    const int WAIT_FOR_PACKET_TIMEOUT = 3; const int NUMBER_OF_FAILURES = 7;
-    do
-    {
-        do
-        {
-            do
-            {
-                // TODO: Wait WAIT_FOR_PACKET_TIMEOUT to see if something appears
-                //		 for us at the socket (we are waiting for DATA)
+    do { // todo: return ACK0 massage to the sender
+        client_addr_len = sizeof(client_addr)
+        if (newsockfd = accept(sockfd, (struct sockaddr *)&client_addr,  client_addr_len) < 0){
+            perror("ERROR using accept()")
+            return -1;
+        }
+        client_addr_len = sizeof(client_addr)
+        do {
+            do {
 
-                if ()// TODO: if there was something at the socket and
+                if(sock_ready = select(newsockfd+1, &read_fds, NULL, NULL, WAIT_FOR_PACKET_TIMEOUT) < 0){
+                    close(newsockfd);
+                    perror("ERROR using select()");
+                    return -1
+                }
+
+                if (sock_ready > 0)// TODO: if there was something at the socket and
                     // we are here not because of a timeout
                 {
                     // TODO: Read the DATA packet from the socket (at
                     // least we hope this is a DATA packet)
+                    if(recvfrom(newsockfd, &buffer, MAX_BLOCK_LEN, NULL, (struct sockaddr *)&client_addr, client_addr_len) < 0){
+                        perror("ERROR using recvfrom");
+                    }
                 }
 
-                if (...) // TODO: Time out expired while waiting for data
+                if (sock_ready == 0) // TODO: Time out expired while waiting for data
                 //		  to appear at the socket
                 {
                     //TODO: Send another ACK for the last packet
-                    timeoutExpiredCount++;
+                    timeoutExpiredCount ++;
+                    if(sendto(newsockfd, &msg, sizeof(msg), NULL, NULL) < 0){
+                        perror("ERROR using sendto");
+                        return -1;
+                    }
                 }
 
-                if (timeoutExpiredCount>= NUMBER_OF_FAILURES)
-                {
-                    // FATAL ERROR BAIL OUT
+                if (timeoutExpiredCount >= NUMBER_OF_FAILURES) {
+                    perror("FATAL ERROR - timeout expired");
+                    return -1
                 }
 
 
-            }while (...) // TODO: Continue while some socket was ready
+            } while (False) // TODO: Continue while some socket was ready
             // but recvfrom somehow failed to read the data
 
             if (...) // TODO: We got something else but DATA
@@ -80,8 +96,10 @@ int main(int argc, char* argv[]) {
             {
                 // FATAL ERROR BAIL OUT
             }
-        }while (FALSE);
+        } while (FALSE);
         timeoutExpiredCount = 0;
         lastWriteSize = fwrite(...); // write next bulk of data
         // TODO: send ACK packet to the client
+    } while(FALSE) // Have blocks left to be read from client (not end of transmission)
+
 }
